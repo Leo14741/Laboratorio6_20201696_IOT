@@ -102,6 +102,7 @@ public class PuzzleActivity extends AppCompatActivity {
         Random random = new Random();
         valorAleatorio = random.nextInt(3) + 3; // Mueve esto a nivel de clase
         // Cambiar el número de columnas y filas del GridLayout
+        System.out.println(valorAleatorio);
         tablero.setColumnCount(valorAleatorio);
         tablero.setRowCount(valorAleatorio);
         // Cargar la imagen usando Glide
@@ -111,7 +112,11 @@ public class PuzzleActivity extends AppCompatActivity {
                     @Override
                     public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
                         Bitmap imagenBitmap = ((BitmapDrawable) resource).getBitmap();
-                        List<Bitmap> piezas = dividirImagenEnPiezas(imagenBitmap, valorAleatorio, valorAleatorio);
+
+                        int numPiezas = (valorAleatorio  * valorAleatorio) -1;
+
+                        List<Bitmap> piezas = dividirImagenEnPiezas(imagenBitmap, valorAleatorio, valorAleatorio, numPiezas);
+                        System.out.println(piezas.toArray().length);
                         // Desordenar las piezas aleatoriamente
                         Collections.shuffle(piezas);
 
@@ -217,7 +222,7 @@ public class PuzzleActivity extends AppCompatActivity {
 
 
 
-    private List<Bitmap> dividirImagenEnPiezas(Bitmap imagen, int filas, int columnas) {
+    private List<Bitmap> dividirImagenEnPiezas(Bitmap imagen, int filas, int columnas, int numPiezas) {
         List<Bitmap> piezas = new ArrayList<>();
 
         int anchoPieza = imagen.getWidth() / columnas;
@@ -225,16 +230,17 @@ public class PuzzleActivity extends AppCompatActivity {
 
         for (int i = 0; i < filas; i++) {
             for (int j = 0; j < columnas; j++) {
-                int x = j * anchoPieza;
-                int y = i * altoPieza;
-                Bitmap pieza = Bitmap.createBitmap(imagen, x, y, anchoPieza, altoPieza);
-                piezas.add(pieza);
+                if (piezas.size() < numPiezas) {
+                    int x = j * anchoPieza;
+                    int y = i * altoPieza;
+                    Bitmap pieza = Bitmap.createBitmap(imagen, x, y, anchoPieza, altoPieza);
+                    piezas.add(pieza);
+                }
             }
         }
 
         return piezas;
     }
-
 
 
     private void distribuirPiezasEnTablero(List<Bitmap> piezas, GridLayout tablero) {
@@ -244,28 +250,31 @@ public class PuzzleActivity extends AppCompatActivity {
         int anchoPieza = tablero.getWidth() / columnas;
         int altoPieza = tablero.getHeight() / filas;
 
-        int tamañoPieza = Math.min(anchoPieza, altoPieza); // Usamos el tamaño mínimo para asegurarnos de que las piezas quepan en el tablero
+        int tamañoPieza = Math.min(anchoPieza, altoPieza);
 
-        for (int i = 0; i < filas; i++) {
-            for (int j = 0; j < columnas; j++) {
-                ImageView imageView = new ImageView(this);
-                imageView.setLayoutParams(new ViewGroup.LayoutParams(tamañoPieza, tamañoPieza));
+        for (int i = 0; i < filas; i++) { // Omitir la última fila
+            for (int j = 0; j < columnas; j++) { // Omitir la última columna
+                if (!(i == filas - 1 && j == columnas - 1)) { // Verifica que no sea la esquina inferior derecha
+                    ImageView imageView = new ImageView(this);
+                    imageView.setLayoutParams(new ViewGroup.LayoutParams(tamañoPieza, tamañoPieza));
 
-                // Configurar la imagen de la pieza
-                imageView.setImageBitmap(piezas.get(i * columnas + j));
+                    // Configurar la imagen de la pieza
+                    imageView.setImageBitmap(piezas.get(i * columnas + j));
 
-                // Asignar un nombre (tag) a la pieza
-                String nombrePieza = "Pieza_" + (i * columnas + j + 1);
-                imageView.setTag(nombrePieza);
+                    // Asignar un nombre (tag) a la pieza
+                    String nombrePieza = "Pieza_" + (i * columnas + j + 1);
+                    imageView.setTag(nombrePieza);
 
-                // Añadir el ImageView al GridLayout en la posición (i, j)
-                GridLayout.Spec rowSpec = GridLayout.spec(i);
-                GridLayout.Spec colSpec = GridLayout.spec(j);
-                GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
-                tablero.addView(imageView, layoutParams);
+                    // Añadir el ImageView al GridLayout en la posición (i, j)
+                    GridLayout.Spec rowSpec = GridLayout.spec(i);
+                    GridLayout.Spec colSpec = GridLayout.spec(j);
+                    GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams(rowSpec, colSpec);
+                    tablero.addView(imageView, layoutParams);
+                }
             }
         }
     }
+
 
 
 
